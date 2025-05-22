@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>주소록 추가</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <h1>주소록 추가</h1>
+    <form action="/submit" method="post" enctype="multipart/form-data">
+        <label for="name" class="label-name">이름:</label>
+        <input type="text" id="name" name="pyname" required>
+        <br><br>
+        <label for="phone">전화번호:</label>
+        <input type="text" id="phone" name="pyphone" required>
+        <br><br>
+        <label for="birthday">생일:</label>
+        <input type="date" id="birthday" name="pybirthday" required>
+        <br><br>
+        <label for="photo">사진 선택:</label>
+        <input type="file" id="photo" name="photo" accept="image/*" onchange="previewImage(event)">
+        <br><br>
+        <label>웹캠으로 사진 촬영:</label>
+        <div id="camera-container">
+            <video id="video" autoplay style="max-width: 200px;"></video>
+            <button type="button" id="capture">촬영</button>
+            <canvas id="canvas" style="display:none;"></canvas>
+        </div>
+        <br>
+        <img id="preview" src="#" alt="사진 미리보기" style="display:none; max-width:200px;"/>
+        <input type="hidden" id="webcam-photo" name="webcam_photo">
+        <br><br>
+        <button type="submit">추가</button>
+    </form>
+    <script>
+        // 사진 미리보기
+        function previewImage(event) {
+            const preview = document.getElementById('preview');
+            const file = event.target.files[0];
+            if (file) {
+                preview.src = URL.createObjectURL(file);
+                preview.style.display = 'block';
+            } else {
+                preview.src = '#';
+                preview.style.display = 'none';
+            }
+        }
+
+        // 웹캠 설정
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const captureButton = document.getElementById('capture');
+        const webcamPhotoInput = document.getElementById('webcam-photo');
+
+        // 웹캠 스트림 시작
+        navigator.mediaDevices.getUserMedia({ video: true })
+            .then(stream => {
+                video.srcObject = stream;
+            })
+            .catch(err => {
+                console.error("웹캠 접근 실패:", err);
+            });
+
+        // 사진 촬영
+        captureButton.addEventListener('click', () => {
+            const context = canvas.getContext('2d');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            // 캔버스 데이터를 이미지로 변환
+            const imageData = canvas.toDataURL('image/png');
+            webcamPhotoInput.value = imageData;
+
+            // 미리보기 업데이트
+            const preview = document.getElementById('preview');
+            preview.src = imageData;
+            preview.style.display = 'block';
+        });
+    </script>
+</body>
+</html>
